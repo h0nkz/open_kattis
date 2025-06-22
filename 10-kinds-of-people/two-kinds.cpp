@@ -30,6 +30,44 @@ bool isValid(std::vector<std::vector<bool>>& visited, int row, int col)
     return true;
 }
 
+std::string find(const int kindOfPeople, int x, int y, const std::pair<int, int>& goal, std::vector<std::vector<bool>>& visited)
+{
+    if(!isValid(visited, x, y))
+        return "";
+    
+    visited[x][y] = true;
+
+    std::string toReturn = ""; 
+    for(int i = 0; i < 4; i++)
+    {
+        int adjx = x + rowDir[i];
+        int adjy = y + colDir[i];
+
+        if(!isValid(visited, adjx, adjy))
+        {    
+            continue;
+        }
+        if((adjx == goal.first) && (adjy == goal.second))
+        {
+            return peopleMap.at(matrix[adjx][adjy]);
+        }
+        if(matrix[adjx][adjy] != kindOfPeople)
+        {
+            visited[adjx][adjy] = true;
+        }
+        else
+        {
+            std::string result = find(kindOfPeople, adjx, adjy, goal, visited);
+            if(!result.empty())
+            {
+                return result;
+            }
+        }
+    }
+
+    return toReturn;
+}
+
 std::string find_path(std::pair<int, int> start, std::pair<int, int> goal)
 {
     if(matrix[start.first][start.second] != matrix[goal.first][goal.second])
@@ -42,43 +80,9 @@ std::string find_path(std::pair<int, int> start, std::pair<int, int> goal)
     
     std::vector<std::vector<bool>> visited(rows, std::vector<bool>(cols, false));
 
-    std::queue<std::pair<int, int>> queue;
+    std::string result = find(kindOfPeople, start.first, start.second, goal, visited);
 
-    queue.push(start);
-    visited[start.first][start.second] = true;
-
-    while(!queue.empty())
-    {
-        auto current = queue.front();
-        int x = current.first;
-        int y = current.second;
-
-        queue.pop();
-
-        for(int i = 0; i < 4; i++)
-        {
-            int adjx = x + rowDir[i];
-            int adjy = y + colDir[i];
-
-            if(!isValid(visited, adjx, adjy))
-            {
-                continue;
-            }
-
-            visited[adjx][adjy] = true;
-
-            if((adjx == goal.first) && (adjy == goal.second))
-            {
-                return peopleMap.at(matrix[adjx][adjy]);
-            }
-            if(matrix[adjx][adjy] == kindOfPeople)
-            {
-                queue.push({adjx, adjy});
-            }
-        }
-    }
-
-    return "neither";
+    return result.empty() ? "neither" : result;
 }
 
 int main()
