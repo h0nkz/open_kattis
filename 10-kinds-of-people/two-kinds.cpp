@@ -10,11 +10,14 @@
 int rows, cols, cases;
 char temp;
 std::vector<std::vector<char>> matrix{};
+
 std::unordered_map<char, std::string> peopleMap 
 {
     {'0', "binary"},
     {'1', "decimal"}
 };
+
+std::unordered_map<std::string, std::string> memo;
 
 int rowDir[] = { -1, 0, 1, 0 };
 int colDir[] = { 0, 1, 0, -1 };
@@ -30,24 +33,31 @@ bool isValid(std::vector<std::vector<bool>>& visited, int row, int col)
     return true;
 }
 
-std::string find(const int kindOfPeople, int x, int y, const std::pair<int, int>& goal, std::vector<std::vector<bool>>& visited)
+void savePath(int startX, int startY, int currX, int currY, char kindOfPeople)
 {
-    if(!isValid(visited, x, y))
+    std::string key = startX + ' ' + startY + ' ' + currX + ' ' + currY + ""; // kindly tell string that you are a string
+    memo.insert(key, peopleMap.at(kindOfPeople));
+}
+
+std::string find(const char kindOfPeople, int currX, int currY, int startX, int startY, int goalX, int goalY, std::vector<std::vector<bool>>& visited)
+{
+    if(!isValid(visited, currX, currY))
         return "";
     
-    visited[x][y] = true;
+    visited[currX][currY] = true;
+    savePath(startX, startY, currX, currY, kindOfPeople);
 
     std::string toReturn = ""; 
     for(int i = 0; i < 4; i++)
     {
-        int adjx = x + rowDir[i];
-        int adjy = y + colDir[i];
+        int adjx = currX + rowDir[i];
+        int adjy = currY + colDir[i];
 
         if(!isValid(visited, adjx, adjy))
         {    
             continue;
         }
-        if((adjx == goal.first) && (adjy == goal.second))
+        if((adjx == goalX) && (adjy == goalY))
         {
             return peopleMap.at(matrix[adjx][adjy]);
         }
@@ -57,7 +67,7 @@ std::string find(const int kindOfPeople, int x, int y, const std::pair<int, int>
         }
         else
         {
-            std::string result = find(kindOfPeople, adjx, adjy, goal, visited);
+            std::string result = find(kindOfPeople, adjx, adjy, startX, startY, goalX, goalY, visited);
             if(!result.empty())
             {
                 return result;
@@ -68,19 +78,19 @@ std::string find(const int kindOfPeople, int x, int y, const std::pair<int, int>
     return toReturn;
 }
 
-std::string find_path(std::pair<int, int> start, std::pair<int, int> goal)
+std::string find_path(int startX, int startY, int goalX, int goalY)
 {
-    if(matrix[start.first][start.second] != matrix[goal.first][goal.second])
+    if(matrix[startX][startY] != matrix[goalX][goalY])
         return "neither";
 
-    if((start.first == goal.first) && (start.second == goal.second))
-        return peopleMap.at(matrix[start.first][start.second]);
+    if((startX == goalX) && (startY == goalY))
+        return peopleMap.at(matrix[startX][startY]);
     
-    int kindOfPeople = matrix[start.first][start.second]; 
+    char kindOfPeople = matrix[startX][startY]; 
     
     std::vector<std::vector<bool>> visited(rows, std::vector<bool>(cols, false));
 
-    std::string result = find(kindOfPeople, start.first, start.second, goal, visited);
+    std::string result = find(kindOfPeople, startX, startY, startX, startY, goalX, goalY, visited);
 
     return result.empty() ? "neither" : result;
 }
@@ -108,6 +118,6 @@ int main()
 
         std::cin >> x1 >> y1 >> x2 >> y2;
 
-        std::cout << find_path(std::make_pair(x1 - 1, y1 - 1), std::make_pair(x2 - 1 , y2 - 1)) << std::endl;
+        std::cout << find_path(x1 - 1, y1 - 1, x2 - 1 , y2 - 1) << std::endl;
     }
 }
