@@ -17,7 +17,7 @@ std::unordered_map<char, std::string> peopleMap
     {'1', "decimal"}
 };
 
-std::unordered_map<std::string, std::string> memo;
+std::unordered_map<std::string, char> memo;
 
 int rowDir[] = { -1, 0, 1, 0 };
 int colDir[] = { 0, 1, 0, -1 };
@@ -33,16 +33,32 @@ bool isValid(std::vector<std::vector<bool>>& visited, int row, int col)
     return true;
 }
 
+std::string makeString(int startX, int startY, int currX, int currY)
+{
+    std::string s{4};
+    s.push_back(startX);
+    s.push_back(startY);
+    s.push_back(currX);
+    s.push_back(currY);
+    return s; // kindly tell string that you are a string
+}
+
 void savePath(int startX, int startY, int currX, int currY, char kindOfPeople)
 {
-    std::string key = startX + ' ' + startY + ' ' + currX + ' ' + currY + ""; // kindly tell string that you are a string
-    memo.insert(key, peopleMap.at(kindOfPeople));
+    memo[makeString(startX, startY, currX, currY)] = kindOfPeople;
+    memo[makeString(currX, currY, startX, startY)] = kindOfPeople; 
 }
 
 std::string find(const char kindOfPeople, int currX, int currY, int startX, int startY, int goalX, int goalY, std::vector<std::vector<bool>>& visited)
 {
     if(!isValid(visited, currX, currY))
         return "";
+
+    std::string memostring = makeString(currX, currY, goalX, goalY);
+    if(auto search = memo.find(memostring); search != memo.end())
+    {
+        return peopleMap[search->second];
+    }
     
     visited[currX][currY] = true;
     savePath(startX, startY, currX, currY, kindOfPeople);
