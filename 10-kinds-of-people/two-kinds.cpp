@@ -11,13 +11,37 @@ int rows, cols, cases;
 char temp;
 std::vector<std::vector<char>> matrix{};
 
+struct path 
+{
+    int startX, startY, currX, currY;
+
+    path(int startX, int startY, int currX, int currY) : startX(startX), startY(startY), currX(currX), currY(currY) {}
+
+    bool operator==(const path& p) const
+    {
+        return startX == p.startX && startY == p.startY && currX == p.currX && currY == p.currY;
+    }
+};
+
+template <>
+struct std::hash<path>
+{
+  std::size_t operator()(const path& p) const
+  {
+     return ((std::hash<int>()(p.startX)
+             ^ (std::hash<int>()(p.startY) << 1)) >> 1)
+             ^ (std::hash<int>()(p.currX) << 1)
+             ^ (std::hash<int>()(p.currY) >> 1);
+  }
+};
+
 std::unordered_map<char, std::string> peopleMap 
 {
     {'0', "binary"},
     {'1', "decimal"}
 };
 
-std::unordered_map<std::string, char> memo;
+std::unordered_map<path, char> memo;
 
 int rowDir[] = { -1, 0, 1, 0 };
 int colDir[] = { 0, 1, 0, -1 };
@@ -43,10 +67,10 @@ std::string makeString(int startX, int startY, int currX, int currY)
     return s; // kindly tell string that you are a string
 }
 
-void savePath(int startX, int startY, int currX, int currY, char kindOfPeople)
+void save_path(int startX, int startY, int currX, int currY, char kindOfPeople)
 {
-    memo[makeString(startX, startY, currX, currY)] = kindOfPeople;
-    memo[makeString(currX, currY, startX, startY)] = kindOfPeople; 
+    memo.insert_or_assign(path(startX, startY, currX, currY), kindOfPeople);
+    memo.insert_or_assign(path(currX, currY, startX, startY), kindOfPeople);
 }
 
 std::string find(const char kindOfPeople, int currX, int currY, int startX, int startY, int goalX, int goalY, std::vector<std::vector<bool>>& visited)
@@ -54,14 +78,14 @@ std::string find(const char kindOfPeople, int currX, int currY, int startX, int 
     if(!isValid(visited, currX, currY))
         return "";
 
-    std::string memostring = makeString(currX, currY, goalX, goalY);
-    if(auto search = memo.find(memostring); search != memo.end())
+    path p(currX, currY, goalX, goalY);
+    if(auto search = memo.find(p); search != memo.end())
     {
         return peopleMap[search->second];
-    }
+    } 
     
     visited[currX][currY] = true;
-    savePath(startX, startY, currX, currY, kindOfPeople);
+    save_path(startX, startY, currX, currY, kindOfPeople);
 
     std::string toReturn = ""; 
     for(int i = 0; i < 4; i++)
