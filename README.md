@@ -6,3 +6,6 @@ Solution in C++ for the problem [4 thought](https://open.kattis.com/problems/4th
 
 ## [a-classy-problem](./a-classy-problem/)
 Solution in C++ for the problem [A Classy Problem](https://open.kattis.com/problems/classy) with difficulty level 4.1 Medium
+
+## [10-kinds-of-people](./10-kinds-of-people/)
+Solution in C++ for the problem [10 kinds of people](https://open.kattis.com/problems/10kindsofpeople) with difficulty level 4.3 Medium
