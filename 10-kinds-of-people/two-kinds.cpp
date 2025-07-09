@@ -1,14 +1,28 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <queue>
 
 /*
     https://open.kattis.com/problems/10kindsofpeople
 */
+struct Cell
+{
+    int section;
+    char value;
+    Cell(int section, char value) : section(section), value(value) {}
 
+    bool operator==(const Cell& c) const
+    {
+        return (section == c.section) && (value == c.value);
+    }
+};
 int rows, cols, cases;
 char temp;
 std::vector<std::vector<char>> matrix{};
+std::queue<std::pair<int,int>> queue{};
+int count;
+std::vector<std::vector<Cell>> sections;
 
 std::unordered_map<char, std::string> peopleMap 
 {
@@ -16,7 +30,6 @@ std::unordered_map<char, std::string> peopleMap
     {'1', "decimal"}
 };
 
-std::unordered_map<std::string, char> memo;
 
 int rowDir[] = { -1, 0, 1, 0 };
 int colDir[] = { 0, 1, 0, -1 };
@@ -32,92 +45,58 @@ bool isValid(std::vector<std::vector<bool>>& visited, int row, int col)
     return true;
 }
 
-std::string makeString(int startX, int startY, int currX, int currY)
+void find_section(int x, int y, char kindOfPeople, int section, std::vector<std::vector<bool>>& visited, std::vector<std::vector<Cell>>& sections)
 {
-    return std::to_string(startX) + "," + std::to_string(startY) + "," +
-           std::to_string(currX) + "," + std::to_string(currY);
-}
+    visited[x][y] = true;
+    sections[x][y] = Cell(section, kindOfPeople);
 
-void save_path(int startX, int startY, int currX, int currY, char kindOfPeople)
-{
-    memo.insert_or_assign(makeString(startX, startY, currX, currY), kindOfPeople);
-}
-
-std::string find(const char kindOfPeople, int currX, int currY, int startX, int startY, int goalX, int goalY, std::vector<std::vector<bool>>& visited)
-{
-    if(!isValid(visited, currX, currY))
-        return "";
-
-    auto s = makeString(currX, currY, goalX, goalY);
-    
-    if(auto search = memo.find(s); search != memo.end())
-    {
-        return peopleMap[search->second];
-    } 
-    
-    visited[currX][currY] = true;
-    save_path(currX, currY, goalX, goalY, kindOfPeople);
-
-    std::string toReturn = ""; 
     for(int i = 0; i < 4; i++)
     {
-        int adjx = currX + rowDir[i];
-        int adjy = currY + colDir[i];
+        int adjx = x + rowDir[i];
+        int adjy = y + colDir[i];
 
         if(!isValid(visited, adjx, adjy))
         {    
             continue;
         }
-        if((adjx == goalX) && (adjy == goalY))
+        else if(matrix[adjx][adjy] != kindOfPeople)
         {
-            return peopleMap.at(matrix[adjx][adjy]);
-        }
-        
-        if(matrix[adjx][adjy] != kindOfPeople)
-        {
-            visited[adjx][adjy] = true;
+            queue.push(std::make_pair(adjx, adjy));
         }
         else
         {
-            std::string result = find(kindOfPeople, adjx, adjy, startX, startY, goalX, goalY, visited);
-            if(!result.empty())
-            {
-                return result;
-            }
+            find_section(adjx, adjy, kindOfPeople, section, visited, sections);
         }
     }
-
-    return toReturn;
 }
 
-std::string find_path(int startX, int startY, int goalX, int goalY)
-{
-    if(matrix[startX][startY] != matrix[goalX][goalY])
-        return "neither";
-
-    if((startX == goalX) && (startY == goalY))
-        return peopleMap.at(matrix[startX][startY]);
-    
-    char kindOfPeople = matrix[startX][startY]; 
-    
+void flood(int rows, int cols)
+{   
     std::vector<std::vector<bool>> visited(rows, std::vector<bool>(cols, false));
+    sections = std::vector(rows, std::vector<Cell>(cols, Cell(-1, 'x')));
 
-    auto s = makeString(startX, startY, goalX, goalY);
-    
-    if(auto search = memo.find(s); search != memo.end())
+    queue.push(std::make_pair(0, 0));
+    int section = 0;
+
+    while(!queue.empty())
     {
-        if(search->second == kindOfPeople)
-        return peopleMap[search->second];
-    } 
+        auto coord = queue.front();
+        int x = coord.first;
+        int y= coord.second;
 
-    std::string result = find(kindOfPeople, startX, startY, startX, startY, goalX, goalY, visited);
-
-    return result.empty() ? "neither" : result;
+        char kindOfPeople = matrix[x][y];
+        if(!visited[x][y])
+        {
+            find_section(x, y, kindOfPeople, section++, visited, sections);
+        }
+        queue.pop();
+    }
 }
 
 int main()
 {
     std::cin >> rows >> cols;
+    count = rows * cols;
 
     for(int i = 0; i < rows; i++)
     {
@@ -130,6 +109,8 @@ int main()
         matrix.push_back(vec);
     }     
 
+    flood(rows, cols);
+
     std::cin >> cases;
 
     std::string string_out{};
@@ -140,7 +121,14 @@ int main()
 
         std::cin >> x1 >> y1 >> x2 >> y2;
 
-        string_out.append(find_path(x1 - 1, y1 - 1, x2 - 1 , y2 - 1) + "\n");
+        if(sections[x1-1][y1-1] == sections[x2-1][y2-1])
+        {
+            string_out.append(peopleMap[sections[x1-1][y1-1].value] + "\n");
+        }
+        else
+        {
+            string_out.append("neither\n");
+        }
     }
 
     if(cases > 0)
