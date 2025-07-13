@@ -4,6 +4,7 @@
 # optimize https://www.geeksforgeeks.org/dsa/introduction-to-disjoint-set-data-structure-or-union-find-algorithm/
 
 from functools import cmp_to_key
+import time
 
 def comparator(a,b):
     return a[2] - b[2]
@@ -40,8 +41,9 @@ class DSU:
         self.parent[s2] = s1
         self.rank[s1] += 1
 
-def kruskal():
-  milkAndCats = input()
+def kruskal(f):
+  # milkAndCats = input()
+  milkAndCats = f.readline()
   milkAndCats = milkAndCats.split()
 
   milk = int(milkAndCats[0])
@@ -52,7 +54,7 @@ def kruskal():
   edges = int((cats * (cats - 1)) / 2)
 
   for i in range(edges) :
-      edge = input()
+      edge = f.readline() # input()
       edge = edge.split()
       edgeList.append([int(edge[0]), int(edge[1]), int(edge[2])])
       edgeList.append([int(edge[1]), int(edge[0]), int(edge[2])])
@@ -72,16 +74,18 @@ def kruskal():
         break
 
   if(milk >= cost):
-    print('yes')
+    print('yes milk: {}, cost: {}'.format(milk, cost))
   else: 
-    print('no')
+    print('no milk: {}, cost: {}'.format(milk, cost))
 
 
 if __name__ == '__main__':
-  testCases = input()
-  testCases = int(testCases)
-  i = 0
-  while i < testCases:
-    kruskal()
-    i = i + 1 
-  
+  with open("graph-testdata.txt") as f: 
+    start_time = time.time()
+    testCases = f.readline()
+    testCases = int(testCases)
+    i = 0
+    while i < testCases:
+      kruskal(f)
+      i = i + 1 
+  print("time: {}".format(time.time() - start_time))
