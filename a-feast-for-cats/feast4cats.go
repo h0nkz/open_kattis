@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"sort"
+	"container/heap"
 )
 
 func kruskals() string {
@@ -20,30 +21,30 @@ func kruskals() string {
 	edges := make([]Edge, numOfEdges)
 	j := 0
 
-	dsu := DSU{}
-	dsu.parent = make([]int, cats)
-	dsu.rank = make([]int, cats)
+	adjList := make([][]Edge, numOfEdges)
+	visited := make([]bool, cats)
 
-	for i := 0; i < numOfEdges; i++ {
+	for i := range numOfEdges {
+		adjList[i] = make([]Edge, cats - 1)
 		var edge Edge
-		fmt.Scanf("%d %d %d", &edge.edgeFrom, &edge.edgeTo, &edge.weight)
-		edges[i] = edge
-		if j < cats {
-			dsu.parent[j] = j
-			dsu.rank[j] = 0
-			j++
-		}
+		var from, to, weight int
+		fmt.Scanf("%d %d %d", &from, &to, &weight)
+		adjList[from] = append(edges[from], Edge{from, to, weight})
+		adjList[to] = append(edges[to], Edge{to, from, weight})
+
 	}
 
-	sort.Slice(edges[:], func(i, j int) bool {
-  		return edges[i].weight < edges[j].weight
-	})
 
-	count := 0
+
 	cost := 0
+	queue := &EdgeHeap{}
+	heap.Init(queue)
+	heap.Push()
+
+	while()
 	for _, edge := range edges {
-		if dsu.find(edge.edgeFrom) != dsu.find(edge.edgeTo) {
-			dsu.union(edge.edgeFrom, edge.edgeTo)
+		if dsu.find(edge.from) != dsu.find(edge.to) {
+			dsu.union(edge.from, edge.to)
 			cost += edge.weight
 			count++
 			if count == cats - 1 {
@@ -72,45 +73,28 @@ func main() {
 }
 
 type Edge struct {
-	edgeFrom int
-	edgeTo int
+	from int
+	to int
 	weight int
 }
 
+// An EdgeHeap is a min-heap of ints.
+type EdgeHeap []Edge
 
+func (h EdgeHeap) Len() int           { return len(h) }
+func (h EdgeHeap) Less(i, j int) bool { return h[i].weight < h[j].weight }
+func (h EdgeHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
 
-type DSU struct {
-	parent []int
-	rank []int
+func (h *EdgeHeap) Push(x any) {
+	// Push and Pop use pointer receivers because they modify the slice's length,
+	// not just its contents.
+	*h = append(*h, x.(Edge))
 }
 
-func (self DSU) initiate(cats int) {
-	self.parent = make([]int, cats)
-	self.rank = make([]int, cats)
-	for i := 0; i < cats; i++ {
-		self.parent[i] = i
-		self.rank[i] = 0
-	}
-}
-
-func (self DSU) find(i int) int {
-	if self.parent[i] != i {
-		self.parent[i] = self.find(self.parent[i])
-	}
-	return self.parent[i]
-}
-
-func (self DSU) union(x int, y int) {
-	s1 := self.find(x)
-	s2 := self.find(y)
-	if s1 != s2 {
-		if self.rank[s1] < self.rank[s2] {
-			self.parent[s1] = s2
-		} else if self.rank[s1] > self.rank[s2] {
-			self.parent[s2] = s1
-		} else {
-			self.parent[s2] = s1
-			self.rank[s1] += 1
-		}
-	}
+func (h *EdgeHeap) Pop() any {
+	old := *h
+	n := len(old)
+	x := old[n-1]
+	*h = old[0 : n-1]
+	return x
 }
